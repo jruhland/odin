@@ -1,0 +1,33 @@
+branches:
+  only:
+    - master
+    - dev
+
+matrix:
+  include:
+    - script: mix test
+      language: elixir
+      elixir: "1.3.0"
+      cache: mix
+      before_script:
+        - mix ecto.create
+      addons:
+        redis-server: '3.2.6'
+        postgresql: '9.6'
+      after_success:
+        - bash <(curl -s https://codecov.io/bash) -cF elixir
+    - script: npm test
+      cache: npm
+      language: node_js
+      node_js: "6"
+      after_success:
+        - bash <(curl -s https://codecov.io/bash) -cF js
+    - script: godep go test -race -coverprofile=coverage.txt -covermode=atomic
+      before_install: cd agent
+      install:
+        - go get github.com/tools/godep
+        - godep restore
+      language: go
+      go: "1.7"
+      after_success:
+        - bash <(curl -s https://codecov.io/bash) -cF go
